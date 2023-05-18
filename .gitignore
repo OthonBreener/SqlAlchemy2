@@ -1,0 +1,47 @@
+# Arquivos e pastas específicos do Python
+__pycache__/
+*.pyc
+
+
+# Arquivos de configuração
+*.conf
+*.cfg
+*.ini
+
+# Arquivos de log
+*.log
+*.swp
+
+# Arquivos gerados por ferramentas de compilação
+*.pyo
+*.pyd
+
+# Arquivos de dependências
+venv/
+.env
+
+# Arquivos de configuração do PyCharm
+.idea/
+
+# Arquivos de configuração do Python no PyCharm
+*.iml
+
+# Arquivos de cache do PyCharm
+*.idea/
+*.sourcemaps/
+*.coverage
+.coverage.*
+*.pstats
+*.sqlite3
+
+# Arquivos gerados pelo PyCharm
+*.stackdump
+
+# Diretório de ambiente virtual do PyCharm
+.venv/
+
+# Diretório de banco de dados SQLite do PyCharm
+*.sqlite
+
+# Diretório de logs do PyCharm
+logs/
