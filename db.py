@@ -1,7 +1,7 @@
 from dotenv import load_dotenv
 from os import getenv
 from sqlalchemy import create_engine, MetaData
-from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
 class Modelo(DeclarativeBase):
     metadata = MetaData(
@@ -17,4 +17,6 @@ class Modelo(DeclarativeBase):
 load_dotenv()
 
 engine = create_engine(getenv('DATABASE_URL'))
+Session = sessionmaker(engine)
+
 Modelo.metadata.create_all(engine)

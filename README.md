@@ -50,5 +50,56 @@ class Modelo(DeclarativeBase):
 O objeto MetaData tem o método **create_all()** que é usado para criar as tabelas de banco de dados
 associadas com os modelos definidos. Uma limitação importante do create_all é que ele apenas cria
 tabelas que não existem no banco de dados, não sendo possível atualizar ou mudar uma tabela já
-existente, para isso é necessário utilziar o Alembic. Por conviniência, o MetaData tambpem tem o 
+existente, para isso é necessário utilziar o Alembic. Por conviniência, o MetaData tambem tem o 
 objeto **drop_all()**, usado para apagar todas as tabelas.
+
+## Session
+
+Outra entidade importante em aplicações baseadas em ORM é a sessão (session). O objeto sessão mantém a
+lista de instâncias de modelos novos, lidos, modificados e excluídos. Mudanças que são acumuladas na 
+sessão sçao passadas para o banco de dados no contexto de uma transação de banco de dados, quando
+a sessão é flushed (liberada), em muitos casos a operação é publicada automaticamente pelo SQLAlchemy.
+Uma operação de flush escreve as mudanças no banco de dados, mas mantém aberta a transação.
+
+Quando a sessão é comitada (committed), a transação de banco de dados correspondente é comitada 
+também, fazendo com que todas as mudanças sejam permanentemente escritas no banco de dados. Transações
+são o mais importante beneficio de bancos de dados relacionais, desenhada para manter a integridade
+dos dados. As mudanças que são comitadas como parte de uma transação, são escritas como uma operação
+atômica, logo, erros ou interrupções inesperadas nunca vão resultar em dados parciais ou incompletos.
+
+Se um erro ocorrer enquanto a sessão está ativa, uma operação de **rollback** na sessão vai reverter a 
+transação e todas as mudanças feitas naquele ponto da sessão será desfeito. O exemplo abaixo mostra como
+um objeto criado pode ser adicionado na sessão e comitado:
+
+```python
+from sqlalchemy.orm import Session
+
+with Session(engine) as session:
+    try:
+        session.add(objeto)
+        session.commit()
+    except:
+        session.rollback()
+        raise
+```
+
+Objetos de sessão são desenhados para acumular mundaças até que elas sejam comitadas ou revertidas (rollback).
+O método **add()** é usado para inserir um novo objeto dentro da sessão, o bloco de try/except garante que
+a sessão vai ser sempre comitada ou revertida. Essa não é a melhor forma de lidar com uma sessão, a melhor
+maneira é criando um gerenciador de contexto, este garante que a sessão é sempre propriamente fechada.
+Pensando nisso, o SQLAlchemy fornece um caminho mais conciso para trabalhar com sessão. A função 
+**sessionmaker** fornece uma classe de Sessão customizada com todas as opções incorporadas:
+
+```python
+from sqlalchemy.orm import sessionmaker
+
+Session = sessionmaker(engine)
+
+with Session() as session:
+    with session.begin():
+        session.add(objeto)
+```
+
+O exemplo acima faz o mesmo que o primeiro, porém, subistituimos o bloco de try/except pelo contexto de 
+session.begin(), que implementa a mesma lógica internamente. Podemos definir o objeto Session no arquivo de
+banco de dados e apenas importar ele para outros locais.
