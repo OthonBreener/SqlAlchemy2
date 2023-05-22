@@ -103,3 +103,7 @@ with Session() as session:
 O exemplo acima faz o mesmo que o primeiro, porém, subistituimos o bloco de try/except pelo contexto de 
 session.begin(), que implementa a mesma lógica internamente. Podemos definir o objeto Session no arquivo de
 banco de dados e apenas importar ele para outros locais.
+
+## Abrindo o sqllite no vscode
+
+Aperte: CTRL + P e digite >sqlite
