@@ -21,7 +21,7 @@ def main():
                         nome=linha.get('name'),
                         fabricado=linha.get('manufacturer'),
                         ano=linha.get('year'),
-                        pais=linha.get('contry'),
+                        pais=linha.get('country'),
                         cpu=linha.get('cpu'),
                     )
                     session.add(produto)

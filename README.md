@@ -11,6 +11,12 @@ construtores da linguagem python.
 permite muitas operações de banco de dados serem derivadas automaticamente de
 ações realizando em objetos python.
 
+## Abrindo o sqllite no vscode
+
+Dica para usar o sqlite no vscode:
+
+Aperte: CTRL + P e digite >sqlite
+
 ## Metadata
 
 O SqlAlchmey mantém a definição de todas as tabelas que compõem o banco de dados
@@ -104,6 +110,74 @@ O exemplo acima faz o mesmo que o primeiro, porém, subistituimos o bloco de try
 session.begin(), que implementa a mesma lógica internamente. Podemos definir o objeto Session no arquivo de
 banco de dados e apenas importar ele para outros locais.
 
-## Abrindo o sqllite no vscode
+## Querys
 
-Aperte: CTRL + P e digite >sqlite
+SqlAlchemy fornece um método similar a palavra chave SELECT do sql para buscar
+dados no banco. O método select pode ser usado para buscar os dados de um determinado
+objeto no banco de dados, se dermos um print na query, obtemos o código SQL que está
+associado ao objeto query do SQLAlchemy.
+
+```python
+from db import Session
+from models import Produto
+from sqlalchemy import select
+
+query = select(Produto)
+
+>>> print(query)
+SELECT produtos.id, produtos.nome, produtos.fabricado, produtos.ano, produtos.pais, produtos.cpu 
+FROM produtos
+```
+
+Depois de criar a query, podemos executa-la usando a session, o qual vai enviar para
+o driver do banco de dados para executar através de uma conexão mantida pela engine.
+Isso pode ser feito da seguinte maneira:
+
+```python
+session = Session()
+
+resultado = session.execute(query)
+
+>>> list(resultado)
+
+[
+    (Produto(1, "Acorn Atom"),),
+    (Produto(2, "BBC Micro"),),
+    ...
+]
+```
+
+O resultado retornado é um objeto iteravel onde cada linha da tabela é convertida
+automaticamente para a classe modelo utilizada. O SQLAlchemy retorna para cada resultado uma
+tupla, por que querys podem algumas vezes retornar multiplos valores por linha. Como o
+SQLAlchemy não sabe quantos resultados por linha são esperados, ele sempre retorna
+cada linha como uma tupla. 
+
+Se você sabe que vai ser retornado apenas um valor por linha, então você pode usar
+o conviniente método scalars() ao executar a query, este vai retornar o primeiro valor
+da tupla. Caso você use o scalars() e o resultado esteja retornando mais de um valor por
+linha, os valores restantes serão descartados.
+
+```python
+>>> session.scalars(query).all()
+
+[Produto(1, "Acorn Atom"), Produto(2, "BBC Micro"), ...]
+```
+
+O método all() é usado para retornar diretamente uma lista. Existe outros métodos igualmente interessantes:
+
+* first(): retorna o primeiro resultado da query ou None se não existir resultados, se existir
+mais resultados, eles são descartados.
+
+* one(): retorna o primeiro resultado e apenas ele, se existe zero ou mais que um resultado,
+uma exceção é levantada.
+  
+* one_or_none(): retorna o primeiro resultado e apenas ele, ou None se não existir
+resultado. Se existir dois ou mais resultados, uma exceção é levantada.
+
+Para todos esses métodos é possível usar o scalars(), porém há metodos prontos similares
+aos métodos de busca do execute:
+
+* scalar(query): similar a scalars(query).first()
+* scalar_one(query): similar a scalars(query).one()
+* scalar_one_or_one(query): similar a scalars(query).one_or_none()
