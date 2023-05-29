@@ -289,3 +289,72 @@ semelhante ao feito com dois where():
 ```python
 query = select(Produto).where(Produto.ano.between(1970, 1979))
 ```
+
+## Ordenando resultados
+
+As querys acima retornam os resultados requisitados na ordem que o servidor de banco
+de dados escolher, mas bancos de dados relacionais conseguem retornar resultados
+ordenados de forma eficiente. O método **order_by()** pode ser adicionado na query
+para especificar uma ordem desejada.
+
+```python
+query = select(Produto).order_by(Produto.nome)
+```
+
+Também é possível organizar em ordem decrescente usando o método desc() no atributo
+da coluna dado na clausa order_by(). O exemplo abaixo retorna os produtos organizados
+pelo ano na ordem descrecente:
+
+```python
+query = select(Produto).order_by(Produto.ano.desc())
+```
+
+Existe muitas situações em que apenas um único critério de ordem é insuficiente, por exemplo,
+a query acima retorna todos os itens construidos no mesmo ano em ordem aleatória.
+O método order_by() aceita multiplos argumentos, cada um adiciona um nível de organização.
+O exemplo abaixo pode ser melhorado com um segundo critério:
+
+```python
+query = select(Produto).order_by(Produto.ano.desc(), Produto.nome.asc())
+```
+
+Note o método **asc()** o qual é usado para especificar que o resultado deve ser 
+ordenado pelo nome do produto na ordem crescente. A ordem crescente é o padrão, mas
+é interessante adicionar nesse caso para que fica claro qual a ordem a query está
+especificando.
+
+## Acessando colunas individuais
+
+Nos exemplos de query até agora foi requisitado linhas inteiras da tabela de produtos,
+no qual o SQLAlchemy ORM mapeia instâncias da classe modelo Produto. A função select()
+é muito flexível e pode trabalhar com dados mais granulados também. Por exemplo, uma
+aplicação pode precisar recuperar apenas uma coluna individual:
+
+```python
+query = select(Produto.nome)
+
+>>> session.scalars(query).all()
+['Acorn Atom',
+ 'BBC Micro',
+ 'Electron',
+ 'BBC Master',
+ ...]
+```
+
+Como discutido anteriormente, a função select() não é limitada para retornar um único
+valor por resultado, é possível requisitar multiplos resultados na mesma query.
+O exemplo abaixo obtém o nome e fabricante de cada produto:
+
+```python
+query = select(Produto.nome, Produto.fabricado)
+
+>>> session.execute(query).all()
+[('Acorn Atom', 'Acorn Computers Ltd'),
+ ('BBC Micro', 'Acorn Computers Ltd'),
+ ('Electron', 'Acorn Computers Ltd'),
+ ('BBC Master', 'Acorn Computers Ltd'),
+ ...]
+```
+
+Note que como este exemplo foi executado com session.execute(), o resultado retornado
+é um par de valores em cada linha do resultado retornados como tuplas.
