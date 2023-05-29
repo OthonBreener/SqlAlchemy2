@@ -181,3 +181,111 @@ aos métodos de busca do execute:
 * scalar(query): similar a scalars(query).first()
 * scalar_one(query): similar a scalars(query).one()
 * scalar_one_or_one(query): similar a scalars(query).one_or_none()
+
+## Filtros
+
+As querys que incluem apenas uma declaração select() retornam todos os itens disponiveis,
+que são utéis algumas vezes, mas não todas. Existem muitas situações no qual uma 
+aplicação quer apenas um subconjunto de todos os itens, respeitando algum criterio.
+
+A aplicação pode retornar todos os resultados como mostrado acima e então descartar
+os que não são interessantes, mas isto pode ser muito ineficiente, especialmente para
+tabelas muito grandes. Banco de dados são desenhados para executar filtros e retornar
+apenas os resultados desejados, um caminho que é muito mais eficiente do que a 
+propria aplicação fazer isto por conta própria.
+
+Com SQLAlchemy, um filtro pode ser adicionado em um objeto query com a clausa **where()**.
+O seguinte exemplo mostra como retornar apenas produtos feitos por 'Commodore':
+
+```python
+# busca todos os produtos
+query = select(Produto)
+todos_produtos = session.scalars(query).all()
+
+>>> len(todos_produtos)
+149
+
+# busca apenas os fabricados por 'Commodore'
+query = select(Produto).where(Produto.fabricado == 'Commodore')
+filtrados = session.scalars(query).all()
+
+>> len(filtrados)
+10
+```
+
+O SqlAlchemy implementa uma solucação altamente sofisticada para definir filtros
+que combinam os atributos da classe modelo com operadores padrão do Python como
+'==', '>=', '<=', '!=', exemplo de query:
+
+```python
+query = select(Produto).where(Produto.ano >= 1990)
+```
+
+Multipos where() podem ser usados para especificar multiplos filtros:
+
+```python
+query = select(Produto).where(Produto.fabricado == 'Commodore').where(Produto.ano == 1980)
+```
+
+Multiplos filtros também podem ser implementados dentro de um único where():
+
+```python
+query = select(Produto).where(Produto.fabricado == 'Commodore', Produto.ano == 1980)
+```
+
+Combinar múltiplos filtros como mostrado acima, aplica efetivamente o operador lógico **AND**.
+Algumas querys podem precisar de filtros com o operador **OR**, que é oferecido pelo
+SQLAlchemy com a função **or_()**. O exemplo abaixo mostra como implementar uma query
+que retorna produtos de antes de 1970 ou de depois de 1990:
+
+```python
+from sqlalchemy import or_
+
+query = select(Produto).where(or_(Produto.ano < 1970, Produto.ano > 1990))
+```
+
+Além do or_(), também está disponível uma função para o operador **AND** and_() e a 
+função not_() implementa o operador unário **NOT**:
+
+```python
+from sqlalchemy import and_, not_
+
+query = select(Produto).where(and_(Produto.ano == 1980, Produto.fabricado == 'Commodore'))
+query = select(Produto).where(not_(Produto.fabricado == 'Commodore'))
+```
+
+Outro filtro útil é o operador LIKE, que pode ser usado para implementar uma função
+de busca simples. O seguinte exemplo retorna todos produtos que tem a palavra 'Sinclair'
+no nome:
+
+```python
+query = select(Produto).where(Produto.nome.like('%Sinclair%'))
+
+>>> session.scalars(query).all()
+
+[Produto(128, "Sinclair QL"),
+ Produto(138, "Timex Sinclair 1000"),
+ Produto(139, "Timex Sinclair 1500"),
+ Produto(140, "Timex Sinclair 2048")]
+```
+
+O método like() disponível nos atributos das colunas do modelo, aceita uma string
+de padrão (pattern) de pesquisa e retorna todos os resultados que combinam com 
+esse padrão. O padrão contém o texto para pesquisar expandido com o caracter %,
+aqui estão alguns outros exemplos do padrão para like():
+
+* Sinclair% (Retorna os itens que começam com Sinclair)
+* %Sinclair (Retorna os itens que terminam com Sinclair)
+* % Sinclair (Retorna itens que possuem o final com espaço seguinda de Sinclair)
+* R__% (Retorna itens que começam com a letra R seguidos por mais dois caracteres)
+* _ (Retorna itens que são um caracter longo)
+
+A função **like()** é case-sensitive (ou seja, não diferencia entre maiúsculas e minúsculas),
+caso precise de case-insensitive, você pode usar a função **ilike()**.
+
+A função **between()** pode ser usada para buscar itens dentro de duas condições,
+semelhante ao feito com dois where():
+
+```python
+query = select(Produto).where(Produto.ano.between(1970, 1979))
+```
